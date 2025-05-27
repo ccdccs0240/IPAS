@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue.js 隨機測驗產生器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        /* 確保 body 樣式能被 Tailwind 應用，並提供一個基礎背景 */
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif; /* 使用 Inter 字體 */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #f3f4f6; /* 淺灰色背景，與 Tailwind bg-gray-100 相似 */
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    <script type="module">
+        const { createApp, ref, computed, watch } = Vue;
+
+        // 內嵌的題目資料，用於解決 CORS 問題以進行預覽
+        const jsonData = {
+            rows: [
+                {
+                    name: "Planning",
+                    alias: "規劃實務",
+                    from: [
+                        "108",
+                        "109",
+                        "110",
+                        "111",
+                        "112-1",
+                        "112-2",
+                        "113-1",
+                        "113-2",
+                        "114-1"
+                    ]
+                },
+                {
+                    name: "Protection",
+                    alias: "防護實務",
+                    from: [
+                        "108",
+                        "109",
+                        "110",
+                        "111",
+                        "112-1",
+                        "112-2",
+                        "113-1",
+                        "113-2",
+                        "114-1"
+                    ]
+                }
+            ]
+        };
+
+        // IPASPortal Component (Vue 3 Composition API)
+        const IPASPortal = {
+            setup() {
+                const subjects = ref(jsonData.rows);
+                const selectedSubject = ref(subjects.value[0].name); // 預設選第一個科目
+                const allYears = computed(() => {
+                    const years = new Set();
+                    subjects.value.forEach((subject) => {
+                        subject.from.forEach((year) => years.add(year));
+                    });
+                    return Array.from(years).sort();
+                });
+                const selectedYears = ref([...allYears.value]); // 預設全選年份
+                const selectAllYears = ref(true);
+
+                watch(selectAllYears, (newValue) => {
+                    selectedYears.value = newValue ? [...allYears.value] : [];
+                });
+
+                watch(selectedYears, (newSelectedYears) => {
+                    selectAllYears.value = newSelectedYears.length === allYears.value.length;
+                });
+
+                const shuffleQuestions = ref(false);
+                const shuffleOptions = ref(false);
+                const excludeGroupInformation = ref(false);
+                const hideQuestionOrder = ref(false);
+                const hideOptionOrder = ref(false);
+                const numberOfQuestions = ref(40);
+
+                const startQuiz = () => {
+                    // 在這裡處理開始測驗的邏輯，例如根據選定的科目和年份篩選題目
+                    console.log("選定的科目:", selectedSubject.value);
+                    console.log("選定的年份:", selectedYears.value);
+                    console.log("隨機排序題目:", shuffleQuestions.value);
+                    console.log("隨機排序選項:", shuffleOptions.value);
+                    console.log("排除包含圖片的題目:", excludeGroupInformation.value);
+                    console.log("隱藏題號:", hideQuestionOrder.value);
+                    console.log("隱藏選項:", hideOptionOrder.value);
+                    console.log("測驗題數:", numberOfQuestions.value);
+                    //alert("開始測驗功能尚未實作");
+                    window.open('https://codepen.io/Chen-Nelson/pen/xbGbLxV', '_self');
+                };
+
+                return {
+                    subjects,
+                    selectedSubject,
+                    allYears,
+                    selectedYears,
+                    selectAllYears,
+                    shuffleQuestions,
+                    shuffleOptions,
+                    excludeGroupInformation,
+                    hideQuestionOrder,
+                    hideOptionOrder,
+                    numberOfQuestions,
+                    startQuiz
+                };
+            },
+            template: `
+            <div class="container mx-auto p-6 font-sans">
+                <h1 class="text-2xl font-bold mb-4">測驗設定</h1>
+
+                <div class="mb-4 border p-4 rounded shadow-md">
+                  <h2 class="text-lg font-semibold mb-2">科目</h2>
+                  <div class="flex items-center space-x-4">
+                    <label
+                      v-for="subject in subjects"
+                      :key="subject.name"
+                      class="flex items-center"
+                    >
+                      <input
+                        type="radio"
+                        v-model="selectedSubject"
+                        :value="subject.name"
+                        class="form-radio h-5 w-5 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span class="ml-2">{{ subject.alias }}</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="mb-4 border p-4 rounded shadow-md">
+                  <h2 class="text-lg font-semibold mb-2">歷屆試題範圍</h2>
+                  <label class="block mb-2">
+                    <input
+                      type="checkbox"
+                      v-model="selectAllYears"
+                      class="form-checkbox h-5 w-5 text-green-600 focus:ring-green-500"
+                    />
+                    <span class="ml-2">全選</span>
+                  </label>
+                  <div class="grid grid-cols-3 gap-2">
+                    <label v-for="year in allYears" :key="year" class="flex items-center">
+                      <input
+                        type="checkbox"
+                        v-model="selectedYears"
+                        :value="year"
+                        class="form-checkbox h-5 w-5 text-green-600 focus:ring-green-500"
+                      />
+                      <span class="ml-2">{{ year }}</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="mb-4 border p-4 rounded shadow-md">
+                  <h2 class="text-lg font-semibold mb-2">隨機排序</h2>
+                  <label class="flex items-center">
+                    <input
+                      type="checkbox"
+                      v-model="shuffleQuestions"
+                      class="form-checkbox h-5 w-5 text-purple-600 focus:ring-purple-500"
+                    />
+                    <span class="ml-2">題目顯示</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input
+                      type="checkbox"
+                      v-model="shuffleOptions"
+                      class="form-checkbox h-5 w-5 text-purple-600 focus:ring-purple-500"
+                    />
+                    <span class="ml-2">排除重複選項</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input
+                      type="checkbox"
+                      v-model="excludeGroupInformation"
+                      class="form-checkbox h-5 w-5 text-purple-600 focus:ring-purple-500"
+                    />
+                    <span class="ml-2">排除包含圖片的題目</span>
+                  </label>
+                </div>
+
+                <div class="mb-4 border p-4 rounded shadow-md">
+                  <h2 class="text-lg font-semibold mb-2">隱藏排序</h2>
+                  <label class="flex items-center">
+                    <input
+                      type="checkbox"
+                      v-model="hideQuestionOrder"
+                      class="form-checkbox h-5 w-5 text-yellow-600 focus:ring-yellow-500"
+                    />
+                    <span class="ml-2">題號</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input
+                      type="checkbox"
+                      v-model="hideOptionOrder"
+                      class="form-checkbox h-5 w-5 text-yellow-600 focus:ring-yellow-500"
+                    />
+                    <span class="ml-2">選項</span>
+                  </label>
+                </div>
+
+                <div class="mb-4 border p-4 rounded shadow-md">
+                  <h2 class="text-lg font-semibold mb-2">測驗題數</h2>
+                  <input
+                    type="number"
+                    v-model="numberOfQuestions"
+                    class="form-input rounded border shadow-sm w-full py-2 px-3 focus:ring-blue-500 focus:border-blue-500"
+                    min="1"
+                  />
+                  <p class="text-sm text-gray-500 mt-1">
+                    如果輸入的題數超過所選範圍的總題目數，將以實際題數為準。
+                  </p>
+                </div>
+
+                <button
+                  class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                  @click="startQuiz"
+                >
+                  開始測驗
+                </button>
+              </div>
+          `
+        }
+
+        // Main App Component (負責渲染 IPASPortal)
+        const App = {
+          components: {
+            IPASPortal
+          },
+          template: `
+            <IPASPortal />
+          `
+        };
+
+        createApp(App).mount('#app');
+    </script>
+</body>
